@@ -75,7 +75,7 @@ public node honda_vfr750 {
 	
     intake intake(
         plenum_volume: 800 * units.cc,
-        plenum_cross_section_area: 8.08 * units.cm2,
+        plenum_cross_section_area: 6.71 * units.cm2,
         intake_flow_rate: k_carb(170.0),
         idle_flow_rate: k_carb(0.01),
         idle_throttle_plate_position: 0.9952,
@@ -85,7 +85,7 @@ public node honda_vfr750 {
     exhaust_system_parameters es_params(
         outlet_flow_rate: k_carb(1500.0),
         primary_tube_length: 1.4 * units.m,
-        primary_flow_rate: k_carb(250.0),
+        primary_flow_rate: k_carb(225.0),
         velocity_decay: 1
     )
 
@@ -102,7 +102,7 @@ public node honda_vfr750 {
 
     b0 
         .add_cylinder(
-            piston: piston(piston_params, blowby: k_28inH2O(0)),
+            piston: piston(piston_params, blowby: k_28inH2O(0.01)),
             connecting_rod: connecting_rod(cr_params),
             rod_journal: rj1,
             intake: intake,
@@ -110,7 +110,7 @@ public node honda_vfr750 {
             ignition_wire: wires.wire3
         )
         .add_cylinder(
-            piston: piston(piston_params, blowby: k_28inH2O(0)),
+            piston: piston(piston_params, blowby: k_28inH2O(0.01)),
             connecting_rod: connecting_rod(cr_params),
             rod_journal: rj0,
             intake: intake,
@@ -121,7 +121,7 @@ public node honda_vfr750 {
     
     b1 
         .add_cylinder(
-            piston: piston(piston_params, blowby: k_28inH2O(0)),
+            piston: piston(piston_params, blowby: k_28inH2O(0.01)),
             connecting_rod: connecting_rod(cr_params),
             rod_journal: rj1,
             intake: intake,
@@ -129,7 +129,7 @@ public node honda_vfr750 {
             ignition_wire: wires.wire4
         )
         .add_cylinder(
-            piston: piston(piston_params, blowby: k_28inH2O(0)),
+            piston: piston(piston_params, blowby: k_28inH2O(0.01)),
             connecting_rod: connecting_rod(cr_params),
             rod_journal: rj0,
             intake: intake,
@@ -148,23 +148,22 @@ public node honda_vfr750 {
 
     harmonic_cam_lobe intake_lobe_profile(
         duration_at_50_thou: 210 * units.deg,
-        gamma: 1.0,
-        lift: 14 * units.mm,
+        gamma: 1,
+        lift: 12 * units.mm,
         steps: 100
     )
 	
 	harmonic_cam_lobe exhaust_lobe_profile(
         duration_at_50_thou: 213 * units.deg,
-        gamma: 1.0,
-        lift: 14 * units.mm,
+        gamma: 1,
+        lift: 12 * units.mm,
         steps: 100
     )
 
     vfr750_camshaft_builder camshaft(
         lobe_profile: "N/A",
         intake_lobe_profile: intake_lobe_profile,
-        exhaust_lobe_profile: exhaust_lobe_profile,
-		base_radius: 17 * units.mm
+        exhaust_lobe_profile: exhaust_lobe_profile
     )
 
     b0.set_cylinder_head (
@@ -203,20 +202,20 @@ private node vfr750_distributor {
 
     function timing_curve(1000 * units.rpm)
     timing_curve
-        .add_sample(0000 * units.rpm, 10 * units.deg)
-		.add_sample(1000 * units.rpm, 15 * units.deg)
-		.add_sample(2000 * units.rpm, 20 * units.deg)
-		.add_sample(3000 * units.rpm, 23 * units.deg)
-		.add_sample(4000 * units.rpm, 25 * units.deg)
-		.add_sample(5000 * units.rpm, 30 * units.deg)
-		.add_sample(6000 * units.rpm, 31 * units.deg)
-		.add_sample(7000 * units.rpm, 33 * units.deg)
-		.add_sample(8000 * units.rpm, 34 * units.deg)
-		.add_sample(9000 * units.rpm, 34 * units.deg)
-        .add_sample(10000 * units.rpm, 35 * units.deg)
-        .add_sample(11000 * units.rpm, 35 * units.deg)
-        .add_sample(12000 * units.rpm, 35 * units.deg)
-        .add_sample(13000 * units.rpm, 35 * units.deg)
+        .add_sample(0000 * units.rpm, 15 * units.deg)
+		.add_sample(1000 * units.rpm, 18 * units.deg)
+		.add_sample(2000 * units.rpm, 23 * units.deg)
+		.add_sample(3000 * units.rpm, 25 * units.deg)
+		.add_sample(4000 * units.rpm, 28 * units.deg)
+		.add_sample(5000 * units.rpm, 33 * units.deg)
+		.add_sample(6000 * units.rpm, 34 * units.deg)
+		.add_sample(7000 * units.rpm, 35 * units.deg)
+		.add_sample(8000 * units.rpm, 38 * units.deg)
+		.add_sample(9000 * units.rpm, 38 * units.deg)
+        .add_sample(10000 * units.rpm, 39 * units.deg)
+        .add_sample(11000 * units.rpm, 39 * units.deg)
+        .add_sample(12000 * units.rpm, 40 * units.deg)
+        .add_sample(13000 * units.rpm, 40 * units.deg)
 }
 
 
@@ -225,7 +224,7 @@ private node vfr750_camshaft_builder {
     input intake_lobe_profile: lobe_profile;
     input exhaust_lobe_profile: lobe_profile;
     input advance: 1 * units.deg; 
-    input base_radius: 19 * units.mm;
+    input base_radius: 14 * units.mm;
 
     output intake_cam_0: _intake_cam_0;
     output exhaust_cam_0: _exhaust_cam_0;
@@ -242,7 +241,6 @@ private node vfr750_camshaft_builder {
     camshaft _intake_cam_1(params, lobe_profile: intake_lobe_profile)
     camshaft _exhaust_cam_1(params, lobe_profile: exhaust_lobe_profile)
 	
-	label rot(2 * (360.0 / 4) * units.deg)
     label rot90(90 * units.deg)
 	label rot180(180 * units.deg)
     label rot360(360 * units.deg)
@@ -291,19 +289,18 @@ private node vfr750_camshaft_builder {
 private node vfr750_engine_head {
 
     // Valve sizes for RC45:
-    // Inlet: 29 mm     Areas: 29 * 3,14^2   -> 286 mm2 (*2) -> 5.72 cm2
+    // In:    29 mm     Areas: 29 * 3,14^2   -> 286 mm2 (*2) -> 5.72 cm2
     // Ex:    24.5mm           24.5 * 3,14^2 -> 241 mm2 (*2) -> 4.82 cm2
 
     input intake_camshaft;
     input exhaust_camshaft;
     input intake_runner_volume: 57.2 * units.cc;
-    input intake_runner_cross_section_area: 5.72 * units.cm2;
+    input intake_runner_cross_section_area: 4.82 * units.cm2;
     input exhaust_runner_volume: 72.3 * units.cc;
-    input exhaust_runner_cross_section_area: 4.82 * units.cm2;
+    input exhaust_runner_cross_section_area: 5.72 * units.cm2;
 
-    input flow_attenuation: 1.0;
-    input lift_scale: 1.0;
-    input flip_display: false;
+    input flow_attenuation: 1;
+    input lift_scale: 1;
     alias output __out: head;
 
     function intake_flow(50 * units.thou)

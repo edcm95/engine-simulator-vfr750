@@ -1,0 +1,332 @@
+import "engine_sim.mr"
+
+units units()
+constants constants()
+impulse_response_library ir_lib()
+
+private node wires {
+    output wire1: ignition_wire();
+    output wire2: ignition_wire();
+	output wire3: ignition_wire();
+	output wire4: ignition_wire();
+}
+
+public node honda_vfr750 {
+    alias output __out: engine;
+	
+	label bore(70.0 * units.mm)
+	label stroke(48.6 * units.mm)
+	label rod_length(95 * units.mm)
+	label compression_height(17.3 * units.mm)
+	label cyl_head_chamber_vol(10 * units.cc)
+
+    engine engine(
+        name: "VFR750F",
+        starter_torque: 200 * units.lb_ft,
+        starter_speed: 600 * units.rpm,
+        redline: 14000 * units.rpm,
+        fuel: fuel(
+            max_burning_efficiency: 0.987
+        ),
+        hf_gain: 0.001,
+        noise: 0.2,
+        jitter: 0.4,
+        simulation_frequency: 20000
+    )
+
+    wires wires()
+
+    crankshaft c0(
+        throw: stroke / 2,
+        flywheel_mass: 5 * units.kg,
+        mass: 5 * units.kg,
+        friction_torque: 5.0 * units.lb_ft,
+        moment_of_inertia: 0.22986844776863666 * 0.2,
+        position_x: 0.0,
+        position_y: 0.0,
+        tdc: 135 * units.deg                // engine tilted 45º the TDC 0º become 45º?
+    )
+
+    rod_journal rj0(angle: 0 * units.deg)   // pistons 1 and 2
+	rod_journal rj1(angle: 180 * units.deg) // pistons 3 and 4
+	
+    c0
+        .add_rod_journal(rj0) // order does not matter
+        .add_rod_journal(rj1)
+		
+
+    piston_parameters piston_params(
+        mass: 75 * units.g,
+        compression_height: compression_height,
+        wrist_pin_position: 0.0,
+        displacement: 0
+    )
+
+    connecting_rod_parameters cr_params(
+        mass: 75.0 * units.g,
+        moment_of_inertia: 0.0015884918028487504,
+        center_of_mass: 0.0,
+        length: rod_length
+    )
+
+    cylinder_bank_parameters bank_params(
+        bore: bore,
+        deck_height: stroke / 2 + rod_length + compression_height
+    )
+	
+    intake intake(
+        plenum_volume: 800.0 * units.cc,
+        plenum_cross_section_area: 20.0 * units.cm2,
+        intake_flow_rate: k_carb(200.0),
+        idle_flow_rate: k_carb(0.0),
+        idle_throttle_plate_position: 0.9952,
+        throttle_gamma: 1.0
+    )
+
+    exhaust_system_parameters es_params(
+        outlet_flow_rate: k_carb(1000.0),
+        primary_tube_length: 1.8 * units.m,
+        primary_flow_rate: k_carb(200.0),
+        velocity_decay: 0.5
+    )
+
+    exhaust_system exhaust0(
+        es_params,
+        audio_volume: 1.0,
+        //impulse_response: ir_lib.default_0
+        //impulse_response: ir_lib.mild_exhaust_0
+        impulse_response: ir_lib.minimal_muffling_02
+    )
+
+    cylinder_bank b0(bank_params, angle: 45 * units.deg)   // rear bank
+    cylinder_bank b1(bank_params, angle: -45 * units.deg)  // front bank
+
+    b0 
+        .add_cylinder(
+            piston: piston(piston_params, blowby: k_28inH2O(0.05)),
+            connecting_rod: connecting_rod(cr_params),
+            rod_journal: rj1,
+            intake: intake,
+            exhaust_system: exhaust0,
+            ignition_wire: wires.wire3
+        )
+        .add_cylinder(
+            piston: piston(piston_params, blowby: k_28inH2O(0.05)),
+            connecting_rod: connecting_rod(cr_params),
+            rod_journal: rj0,
+            intake: intake,
+            exhaust_system: exhaust0,
+            ignition_wire: wires.wire1
+        )
+        
+    
+    b1 
+        .add_cylinder(
+            piston: piston(piston_params, blowby: k_28inH2O(0.05)),
+            connecting_rod: connecting_rod(cr_params),
+            rod_journal: rj1,
+            intake: intake,
+            exhaust_system: exhaust0,
+            ignition_wire: wires.wire4
+        )
+        .add_cylinder(
+            piston: piston(piston_params, blowby: k_28inH2O(0.05)),
+            connecting_rod: connecting_rod(cr_params),
+            rod_journal: rj0,
+            intake: intake,
+            exhaust_system: exhaust0,
+            ignition_wire: wires.wire2
+        )
+        
+        
+
+    engine
+        .add_cylinder_bank(b0)
+		.add_cylinder_bank(b1)
+
+    engine.add_crankshaft(c0)
+
+
+    harmonic_cam_lobe intake_lobe(
+        duration_at_50_thou: 200 * units.deg,
+        gamma: 1.0,
+        lift: 10 * units.mm,
+        steps: 100
+    )
+	
+	harmonic_cam_lobe exhaust_lobe(
+        duration_at_50_thou: 200 * units.deg,
+        gamma: 1.0,
+        lift: 12 * units.mm,
+        steps: 100
+    )
+
+    vfr750_camshaft_builder camshaft(
+        lobe_profile: "N/A",
+        intake_lobe_profile: intake_lobe,
+        exhaust_lobe_profile: exhaust_lobe,
+		base_radius: 17 * units.mm
+    )
+
+    b0.set_cylinder_head (
+        generic_small_engine_head(
+            chamber_volume: cyl_head_chamber_vol,
+            intake_camshaft: camshaft.intake_cam_0,
+            exhaust_camshaft: camshaft.exhaust_cam_0,
+            flow_attenuation: 0.8
+        )
+    )
+	
+	b1.set_cylinder_head (
+        generic_small_engine_head(
+            chamber_volume: cyl_head_chamber_vol,
+            intake_camshaft: camshaft.intake_cam_1,
+            exhaust_camshaft: camshaft.exhaust_cam_1,
+            flow_attenuation: 0.8
+        )
+    )
+
+    function timing_curve(1000 * units.rpm)
+    timing_curve
+        .add_sample(0000 * units.rpm, 5 * units.deg)
+		.add_sample(1000 * units.rpm, 10 * units.deg)
+		.add_sample(2000 * units.rpm, 15 * units.deg)
+		.add_sample(3000 * units.rpm, 20 * units.deg)
+		.add_sample(4000 * units.rpm, 25 * units.deg)
+		.add_sample(5000 * units.rpm, 25 * units.deg)
+		.add_sample(6000 * units.rpm, 25 * units.deg)
+		.add_sample(7000 * units.rpm, 25 * units.deg)
+		.add_sample(8000 * units.rpm, 25 * units.deg)
+		.add_sample(9000 * units.rpm, 25 * units.deg)
+        .add_sample(10000 * units.rpm, 25 * units.deg)
+        .add_sample(11000 * units.rpm, 25 * units.deg)
+        .add_sample(12000 * units.rpm, 25 * units.deg)
+        .add_sample(13000 * units.rpm, 35 * units.deg)
+        .add_sample(14000 * units.rpm, 35 * units.deg)
+
+    engine.add_ignition_module(
+        vfr750_distributor(
+            wires: wires,
+            timing_curve: timing_curve,
+            rev_limit: 14000 * units.rpm
+        ))
+}
+
+
+label cycle(2 * 360 * units.deg)
+private node vfr750_distributor {
+    input wires;
+    input timing_curve;
+    input rev_limit: 14000 * units.rpm;
+	input limiter_duration: 0.05;
+	
+    alias output __out:
+        ignition_module(timing_curve: timing_curve, rev_limit: rev_limit, limiter_duration: limiter_duration)
+            .connect_wire(wires.wire1, (0.0 / 8.0) * cycle)
+            .connect_wire(wires.wire2, (5.0 / 8.0) * cycle)
+			.connect_wire(wires.wire3, (2.0 / 8.0) * cycle)
+			.connect_wire(wires.wire4, (7.0 / 8.0) * cycle);
+}
+
+
+private node vfr750_camshaft_builder {
+    input lobe_profile;
+    input intake_lobe_profile: lobe_profile;
+    input exhaust_lobe_profile: lobe_profile;
+    input advance: 1 * units.deg; 
+    input base_radius: 19 * units.mm;
+
+    output intake_cam_0: _intake_cam_0;
+    output exhaust_cam_0: _exhaust_cam_0;
+    output intake_cam_1: _intake_cam_1;
+    output exhaust_cam_1: _exhaust_cam_1;
+
+    camshaft_parameters params (
+        advance: advance,
+        base_radius: base_radius
+    )
+
+    camshaft _intake_cam_0(params, lobe_profile: intake_lobe_profile)
+    camshaft _exhaust_cam_0(params, lobe_profile: exhaust_lobe_profile)
+    camshaft _intake_cam_1(params, lobe_profile: intake_lobe_profile)
+    camshaft _exhaust_cam_1(params, lobe_profile: exhaust_lobe_profile)
+	
+	label rot(2 * (360.0 / 4) * units.deg)
+    label rot90(90 * units.deg)
+	label rot180(180 * units.deg)
+    label rot360(360 * units.deg)
+	
+	// '94-'97 - Duration: 232 / 225
+	// Intake = 15 / 37
+	// Exhaust = 35 / 10
+
+    label IVO(15.0 * units.deg) //BTDC
+    label IVC(37.0 * units.deg) //ABDC
+    label EVO(35.0 * units.deg) //BBDC
+    label EVC(10.0 * units.deg) //ATDC
+
+    label intake_duration(IVO + IVC + rot180) // 232
+    label exhaust_duration(EVO + EVC + rot180) // 225
+
+	label ILC(intake_duration / 2.0 - IVO)
+    label ELC(exhaust_duration / 2.0 - EVC)
+
+    // Order of lode adding matters
+    //     180º        270º        180º         90º ...->
+    // 1 -      -> 3 -      -> 2 -     -> 4
+    // 0º         180º        450º       630º
+    // 0 rot       2 rot       5 rot      7 rot
+
+
+    // rear bank
+    _exhaust_cam_0
+        .add_lobe(rot360 - ELC + 2 * rot90)   // cyl 3
+        .add_lobe(rot360 - ELC + 0 * rot90)   // cyl 1
+
+    _intake_cam_0
+        .add_lobe(rot360 + ILC + 2 * rot90)    // cyl 3
+        .add_lobe(rot360 + ILC + 0 * rot90)    // cyl 1
+
+    // front bank
+    _exhaust_cam_1
+        .add_lobe(rot360 - ELC + 7 * rot90)   // cyl 4
+        .add_lobe(rot360 - ELC + 5 * rot90)   // cyl 2
+        
+    _intake_cam_1
+        .add_lobe(rot360 + ILC + 7 * rot90)    // cyl 4
+        .add_lobe(rot360 + ILC + 5 * rot90)    // cyl 2   
+}
+
+
+
+private node honda_vfr750_transmission {
+    alias output __out: transmission;
+
+    transmission transmission(
+        max_clutch_torque: 90 * units.lb_ft
+    )
+
+    transmission.add_gear(4.0)
+    transmission.add_gear(3.5)
+    transmission.add_gear(3.0)
+    transmission.add_gear(2.5)
+    transmission.add_gear(2.0)
+}
+
+private node honda_vfr750_vehicle {
+    alias output __out:
+        vehicle(
+            mass: 240 * units.kg,
+            drag_coefficient: 0.13,
+            cross_sectional_area: (47 * units.inch) * (47 * units.inch),
+            diff_ratio: 3.33,
+            tire_radius: 18 * units.inch,
+            rolling_resistance: 120 * units.N
+        );
+}
+
+public node main {
+    set_engine(honda_vfr750())
+    set_transmission(honda_vfr750_transmission())
+    set_vehicle(honda_vfr750_vehicle())
+}

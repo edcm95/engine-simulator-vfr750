@@ -44,11 +44,11 @@ public node honda_vfr750 {
         moment_of_inertia: 0.22986844776863666 * 0.2,
         position_x: 0.0,
         position_y: 0.0,
-        tdc: 135 * units.deg                // engine tilted 45º the TDC 0º become 45º?
+        tdc: 135 * units.deg          
     )
 
-    rod_journal rj0(angle: 0 * units.deg)   // pistons 1 and 2
-	rod_journal rj1(angle: 180 * units.deg) // pistons 3 and 4
+    rod_journal rj0(angle: 0)            // pistons 1 and 2
+	rod_journal rj1(angle: constants.pi) // pistons 3 and 4
 	
     c0
         .add_rod_journal(rj0) // order does not matter
@@ -93,9 +93,9 @@ public node honda_vfr750 {
     exhaust_system exhaust0(
         es_params,
         audio_volume: 1.0,
-        //impulse_response: ir_lib.default_0
+        impulse_response: ir_lib.default_0
         //impulse_response: ir_lib.mild_exhaust_0
-        impulse_response: ir_lib.minimal_muffling_02
+        //impulse_response: ir_lib.minimal_muffling_01
     )
 
     cylinder_bank b0(bank_params, angle: 45 * units.deg)   // rear bank

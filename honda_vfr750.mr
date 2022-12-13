@@ -7,17 +7,17 @@ impulse_response_library ir_lib()
 private node wires {
     output wire1: ignition_wire();
     output wire2: ignition_wire();
-	output wire3: ignition_wire();
-	output wire4: ignition_wire();
+    output wire3: ignition_wire();
+    output wire4: ignition_wire();
 }
 
 public node honda_vfr750 {
     alias output __out: engine;
-	
-	label bore(70.0 * units.mm)
-	label stroke(48.6 * units.mm)
-	label rod_length(95 * units.mm)
-	label compression_height(17.3 * units.mm)
+    
+    label bore(70.0 * units.mm)
+    label stroke(48.6 * units.mm)
+    label rod_length(95 * units.mm)
+    label compression_height(17.3 * units.mm)
 
     engine engine(
         name: "Honda VFR750F (RC36-II)",
@@ -48,12 +48,12 @@ public node honda_vfr750 {
     )
 
     rod_journal rj0(angle: 0)            // pistons 1 and 2
-	rod_journal rj1(angle: constants.pi) // pistons 3 and 4
-	
+    rod_journal rj1(angle: constants.pi) // pistons 3 and 4
+    
     c0
         .add_rod_journal(rj0) // order does not matter
         .add_rod_journal(rj1)
-		
+        
 
     piston_parameters piston_params(
         mass: (132 + 14.3 + 39) * units.g,
@@ -73,7 +73,7 @@ public node honda_vfr750 {
         bore: bore,
         deck_height: stroke / 2 + rod_length + compression_height
     )
-	
+    
     intake intake(
         plenum_volume: 800 * units.cc,
         plenum_cross_section_area: 6.71 * units.cm2,
@@ -142,7 +142,7 @@ public node honda_vfr750 {
 
     engine
         .add_cylinder_bank(b0)
-		.add_cylinder_bank(b1)
+        .add_cylinder_bank(b1)
 
     engine.add_crankshaft(c0)
 
@@ -155,8 +155,8 @@ public node honda_vfr750 {
             flow_attenuation: 1
         )
     )
-	
-	b1.set_cylinder_head (
+    
+    b1.set_cylinder_head (
         vfr750_engine_head(
             intake_camshaft: camshaft.intake_cam_1,
             exhaust_camshaft: camshaft.exhaust_cam_1,
@@ -179,21 +179,21 @@ private node vfr750_distributor {
         ignition_module(timing_curve: timing_curve, rev_limit: 12500 * units.rpm, limiter_duration: 0.055)
             .connect_wire(wires.wire1, (0.0 / 8.0) * cycle)
             .connect_wire(wires.wire2, (5.0 / 8.0) * cycle)
-			.connect_wire(wires.wire3, (2.0 / 8.0) * cycle)
-			.connect_wire(wires.wire4, (7.0 / 8.0) * cycle);
+            .connect_wire(wires.wire3, (2.0 / 8.0) * cycle)
+            .connect_wire(wires.wire4, (7.0 / 8.0) * cycle);
 
     function timing_curve(1000 * units.rpm)
     timing_curve
         .add_sample(0000 * units.rpm, 15 * units.deg)
-		.add_sample(1000 * units.rpm, 18 * units.deg)
-		.add_sample(2000 * units.rpm, 23 * units.deg)
-		.add_sample(3000 * units.rpm, 25 * units.deg)
-		.add_sample(4000 * units.rpm, 28 * units.deg)
-		.add_sample(5000 * units.rpm, 33 * units.deg)
-		.add_sample(6000 * units.rpm, 34 * units.deg)
-		.add_sample(7000 * units.rpm, 36 * units.deg)
-		.add_sample(8000 * units.rpm, 37 * units.deg)
-		.add_sample(9000 * units.rpm, 39 * units.deg)
+        .add_sample(1000 * units.rpm, 18 * units.deg)
+        .add_sample(2000 * units.rpm, 23 * units.deg)
+        .add_sample(3000 * units.rpm, 25 * units.deg)
+        .add_sample(4000 * units.rpm, 28 * units.deg)
+        .add_sample(5000 * units.rpm, 33 * units.deg)
+        .add_sample(6000 * units.rpm, 34 * units.deg)
+        .add_sample(7000 * units.rpm, 36 * units.deg)
+        .add_sample(8000 * units.rpm, 37 * units.deg)
+        .add_sample(9000 * units.rpm, 39 * units.deg)
         .add_sample(10000 * units.rpm, 40 * units.deg)
         .add_sample(11000 * units.rpm, 42 * units.deg)
         .add_sample(12000 * units.rpm, 42 * units.deg)
@@ -221,8 +221,8 @@ private node vfr750_camshaft_builder {
         lift: 12 * units.mm,
         steps: 100
     )
-	
-	harmonic_cam_lobe exhaust_lobe_profile(
+    
+    harmonic_cam_lobe exhaust_lobe_profile(
         duration_at_50_thou: 213 * units.deg,
         gamma: 1,
         lift: 12 * units.mm,
@@ -233,14 +233,14 @@ private node vfr750_camshaft_builder {
     camshaft _exhaust_cam_0(params, lobe_profile: exhaust_lobe_profile)
     camshaft _intake_cam_1(params, lobe_profile: intake_lobe_profile)
     camshaft _exhaust_cam_1(params, lobe_profile: exhaust_lobe_profile)
-	
+    
     label rot90(90 * units.deg)
-	label rot180(180 * units.deg)
+    label rot180(180 * units.deg)
     label rot360(360 * units.deg)
-	
-	// '94-'97 - Duration: 232 / 225
-	// Intake = 15 / 37
-	// Exhaust = 35 / 10
+    
+    // '94-'97 - Duration: 232 / 225
+    // Intake = 15 / 37
+    // Exhaust = 35 / 10
 
     label IVO(15.0 * units.deg) //BTDC
     label IVC(37.0 * units.deg) //ABDC
@@ -250,7 +250,7 @@ private node vfr750_camshaft_builder {
     label intake_duration(IVO + IVC + rot180) // 232
     label exhaust_duration(EVO + EVC + rot180) // 225
 
-	label ILC(intake_duration / 2.0 - IVO)
+    label ILC(intake_duration / 2.0 - IVO)
     label ELC(exhaust_duration / 2.0 - EVC)
 
 

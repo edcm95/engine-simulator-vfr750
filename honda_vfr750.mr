@@ -21,8 +21,8 @@ public node honda_vfr750 {
 
     engine engine(
         name: "Honda VFR750F (RC36-II)",
-        starter_torque: 200 * units.lb_ft,
-        starter_speed: 600 * units.rpm,
+        starter_torque: 20 * units.lb_ft,
+        starter_speed: 340 * units.rpm,
         redline: 11500 * units.rpm,
         fuel: fuel(
             max_burning_efficiency: 0.987,

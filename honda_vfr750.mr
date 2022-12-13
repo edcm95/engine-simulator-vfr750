@@ -20,10 +20,10 @@ public node honda_vfr750 {
 	label compression_height(17.3 * units.mm)
 
     engine engine(
-        name: "VFR750F",
+        name: "Honda VFR750F (RC36-II)",
         starter_torque: 200 * units.lb_ft,
         starter_speed: 600 * units.rpm,
-        redline: 13500 * units.rpm,
+        redline: 11500 * units.rpm,
         fuel: fuel(
             max_burning_efficiency: 0.987,
             burning_efficiency_randomness: 0.9
@@ -77,7 +77,7 @@ public node honda_vfr750 {
     intake intake(
         plenum_volume: 800 * units.cc,
         plenum_cross_section_area: 6.71 * units.cm2,
-        intake_flow_rate: k_carb(170.0),
+        intake_flow_rate: k_carb(160.0),
         idle_flow_rate: k_carb(0.01),
         idle_throttle_plate_position: 0.9952,
         throttle_gamma: 1.0
@@ -212,11 +212,11 @@ private node vfr750_distributor {
 		.add_sample(6000 * units.rpm, 34 * units.deg)
 		.add_sample(7000 * units.rpm, 36 * units.deg)
 		.add_sample(8000 * units.rpm, 37 * units.deg)
-		.add_sample(9000 * units.rpm, 38 * units.deg)
-        .add_sample(10000 * units.rpm, 39 * units.deg)
-        .add_sample(11000 * units.rpm, 39 * units.deg)
-        .add_sample(12000 * units.rpm, 40 * units.deg)
-        .add_sample(13000 * units.rpm, 40 * units.deg)
+		.add_sample(9000 * units.rpm, 39 * units.deg)
+        .add_sample(10000 * units.rpm, 40 * units.deg)
+        .add_sample(11000 * units.rpm, 42 * units.deg)
+        .add_sample(12000 * units.rpm, 42 * units.deg)
+        .add_sample(13000 * units.rpm, 43 * units.deg)
 }
 
 
@@ -376,10 +376,10 @@ private node honda_vfr750_transmission {
 private node honda_vfr750_vehicle {
     alias output __out:
         vehicle(
-            mass: (240 + 65) * units.kg,
-            drag_coefficient: 0.75,
-            cross_sectional_area: (100 * units.cm) * (60 * units.cm),
-            diff_ratio: 10,
+            mass: (226 + 65) * units.kg,
+            drag_coefficient: 0.82, // not the most aerodynamic bike out there
+            cross_sectional_area: 5616 * units.cm2, // 72 cm wide, 118.5 cm tall
+            diff_ratio: 9.8,
             tire_radius: (43.18 + 10.8) * units.cm,
             rolling_resistance: 29.03 * units.N
         );

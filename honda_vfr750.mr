@@ -199,7 +199,6 @@ private node vfr750_distributor {
         .add_sample(13000 * units.rpm, 45 * units.deg)
 }
 
-
 private node vfr750_camshaft_builder {
     input advance: 0 * units.deg; 
     input base_radius: 12.5 * units.mm;
@@ -298,43 +297,29 @@ private node vfr750_engine_head {
     label exhaust_runner_volume((exhaust_runner_cross_section_area * 9) * units.cc) 
     
     label lift_scale(1)
-    label flow_attenuation(1)
+    label flow_attenuation(0.99)
 
     function intake_flow(50 * units.thou)
     intake_flow
         .add_flow_sample(0 * lift_scale, 0 * flow_attenuation)
-        .add_flow_sample(50 * lift_scale, 25 * flow_attenuation)
-        .add_flow_sample(100 * lift_scale, 75 * flow_attenuation)
-        .add_flow_sample(150 * lift_scale, 100 * flow_attenuation)
-        .add_flow_sample(200 * lift_scale, 130 * flow_attenuation)
-        .add_flow_sample(250 * lift_scale, 180 * flow_attenuation)
-        .add_flow_sample(300 * lift_scale, 190 * flow_attenuation)
-        .add_flow_sample(350 * lift_scale, 220 * flow_attenuation)
-        .add_flow_sample(400 * lift_scale, 240 * flow_attenuation)
-        .add_flow_sample(450 * lift_scale, 250 * flow_attenuation)
-        .add_flow_sample(500 * lift_scale, 260 * flow_attenuation)
-        .add_flow_sample(550 * lift_scale, 260 * flow_attenuation)
-        .add_flow_sample(600 * lift_scale, 260 * flow_attenuation)
-        .add_flow_sample(650 * lift_scale, 255 * flow_attenuation)
-        .add_flow_sample(700 * lift_scale, 250 * flow_attenuation)
+        .add_flow_sample(50 * lift_scale, 41 * flow_attenuation)
+        .add_flow_sample(100 * lift_scale, 77 * flow_attenuation)
+        .add_flow_sample(150 * lift_scale, 113 * flow_attenuation)
+        .add_flow_sample(200 * lift_scale, 144 * flow_attenuation)
+        .add_flow_sample(250 * lift_scale, 171 * flow_attenuation)
+        .add_flow_sample(300 * lift_scale, 194 * flow_attenuation)
+        .add_flow_sample(350 * lift_scale, 225 * flow_attenuation)
 
     function exhaust_flow(50 * units.thou)
     exhaust_flow
         .add_flow_sample(0 * lift_scale, 0 * flow_attenuation)
-        .add_flow_sample(50 * lift_scale, 25 * flow_attenuation)
-        .add_flow_sample(100 * lift_scale, 50 * flow_attenuation)
-        .add_flow_sample(150 * lift_scale, 75 * flow_attenuation)
-        .add_flow_sample(200 * lift_scale, 100 * flow_attenuation)
-        .add_flow_sample(250 * lift_scale, 125 * flow_attenuation)
-        .add_flow_sample(300 * lift_scale, 160 * flow_attenuation)
-        .add_flow_sample(350 * lift_scale, 175 * flow_attenuation)
-        .add_flow_sample(400 * lift_scale, 180 * flow_attenuation)
-        .add_flow_sample(450 * lift_scale, 190 * flow_attenuation)
-        .add_flow_sample(500 * lift_scale, 200 * flow_attenuation)
-        .add_flow_sample(550 * lift_scale, 205 * flow_attenuation)
-        .add_flow_sample(600 * lift_scale, 210 * flow_attenuation)
-        .add_flow_sample(650 * lift_scale, 210 * flow_attenuation)
-        .add_flow_sample(700 * lift_scale, 210 * flow_attenuation)
+        .add_flow_sample(50 * lift_scale, 34 * flow_attenuation)
+        .add_flow_sample(100 * lift_scale, 65 * flow_attenuation)
+        .add_flow_sample(150 * lift_scale, 95 * flow_attenuation)
+        .add_flow_sample(200 * lift_scale, 121 * flow_attenuation)
+        .add_flow_sample(250 * lift_scale, 144 * flow_attenuation)
+        .add_flow_sample(300 * lift_scale, 163 * flow_attenuation)
+        .add_flow_sample(350 * lift_scale, 189 * flow_attenuation)
 
     label cyl_head_chamber_vol(17 * units.cc)
     cylinder_head head(
@@ -374,7 +359,7 @@ private node honda_vfr750_vehicle {
         vehicle(
             mass: (226 + 65) * units.kg,
             drag_coefficient: 0.82, // not the most aerodynamic bike out there
-            cross_sectional_area: 5616 * units.cm2, // 72 cm wide, 118.5 cm tall
+            cross_sectional_area: (72 * 118.5 * 0.6) * units.cm2, // 72 cm wide, 118.5 cm tall
             diff_ratio: 9.4,
             tire_radius: (43.18 + 10.8) * units.cm,
             rolling_resistance: 29.03 * units.N

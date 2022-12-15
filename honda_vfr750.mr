@@ -25,7 +25,7 @@ public node honda_vfr750 {
         starter_speed: 340 * units.rpm,
         redline: 11500 * units.rpm,
         fuel: fuel(
-            max_burning_efficiency: 0.987,
+            max_burning_efficiency: 0.925,
             burning_efficiency_randomness: 0.85
         ),
         hf_gain: 0.00012,

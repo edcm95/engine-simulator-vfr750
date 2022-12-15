@@ -16,7 +16,7 @@ public node honda_vfr750 {
     
     label bore(70.0 * units.mm)
     label stroke(48.6 * units.mm)
-    label rod_length(95 * units.mm)
+    label rod_length(101.5 * units.mm)
     label compression_height(17.3 * units.mm)
 
     engine engine(
@@ -28,9 +28,9 @@ public node honda_vfr750 {
             max_burning_efficiency: 0.987,
             burning_efficiency_randomness: 0.85
         ),
-        hf_gain: 0.001,
-        noise: 0.2,
-        jitter: 0.4,
+        hf_gain: 0.00012,
+        noise: 0.17,
+        jitter: 0.15,
         simulation_frequency: 20000
     )
 
@@ -56,14 +56,14 @@ public node honda_vfr750 {
         
 
     piston_parameters piston_params(
-        mass: (132 + 14.3 + 39) * units.g,
+        mass: (190 + 14.3 + 39) * units.g,
         compression_height: compression_height,
         wrist_pin_position: 0.0,
         displacement: 0
     )
 
     connecting_rod_parameters cr_params(
-        mass: 183.0 * units.g,
+        mass: 311.0 * units.g,
         moment_of_inertia: 0.0015884918028487504,
         center_of_mass: 0.0,
         length: rod_length
@@ -76,8 +76,8 @@ public node honda_vfr750 {
     
     label carb_section_area(177.65) // mm2 for 36 mm keihin carbs
     intake intake(
-        plenum_volume: carb_section_area * 10 * units.cc,
-        plenum_cross_section_area: carb_section_area * 4 / 100 * units.cm2, // 4 carbs
+        plenum_volume: carb_section_area * 10 * units.cc,                      // 10 cm length
+        plenum_cross_section_area: carb_section_area * 4 / 100 * units.cm2,    // 4 carbs
         intake_flow_rate: k_carb(160.0),
         idle_flow_rate: k_carb(0.01),
         idle_throttle_plate_position: 0.9952,

@@ -21,7 +21,7 @@ public node honda_vfr750 {
 
     engine engine(
         name: "Honda VFR750F (RC36-II)",
-        starter_torque: 20 * units.lb_ft,
+        starter_torque: 30 * units.lb_ft,
         starter_speed: 340 * units.rpm,
         redline: 11500 * units.rpm,
         fuel: fuel(
@@ -39,7 +39,7 @@ public node honda_vfr750 {
     crankshaft c0(
         throw: stroke / 2,
         flywheel_mass: 5 * units.kg,
-        mass: 7 * units.kg,
+        mass: 6 * units.kg,
         friction_torque: 2.1 * units.lb_ft,
         moment_of_inertia: 0.22986844776863666 * 0.2,
         position_x: 0.0,
@@ -74,20 +74,25 @@ public node honda_vfr750 {
         deck_height: stroke / 2 + rod_length + compression_height
     )
     
-    label carb_section_area(177.65) // mm2 for 36 mm keihin carbs
-    intake intake(
-        plenum_volume: carb_section_area * 10 * units.cc,                      // 10 cm length
-        plenum_cross_section_area: carb_section_area * 4 / 100 * units.cm2,    // 4 carbs
-        intake_flow_rate: k_carb(160.0),
-        idle_flow_rate: k_carb(0.01),
+    // Intake params
+    intake_parameters intake_params(
+        plenum_volume: 2.8 * units.L,
+        plenum_cross_section_area: 10.179 * 4 * units.cm2,   // (36mm Keihin carbs) -> (pi * 18^2)/100 cm2
+        intake_flow_rate: k_carb(160),
+        runner_flow_rate: k_carb(200),
+        runner_length: 210 * units.mm,
+        molecular_afr: 15.0, // air fuel ratio
         idle_throttle_plate_position: 0.9952,
+        idle_flow_rate: k_carb(0.01),
         throttle_gamma: 1.0
     )
 
+    intake intake0(intake_params)
+
     exhaust_system_parameters es_params(
-        outlet_flow_rate: k_carb(1000.0),
+        outlet_flow_rate: k_carb(1100.0),
         primary_tube_length: 1.5 * units.m,
-        primary_flow_rate: k_carb(250.0),
+        primary_flow_rate: k_carb(300.0),
         velocity_decay: 1
     )
 
@@ -107,7 +112,7 @@ public node honda_vfr750 {
             piston: piston(piston_params, blowby: k_28inH2O(0.01)),
             connecting_rod: connecting_rod(cr_params),
             rod_journal: rj1,
-            intake: intake,
+            intake: intake0,
             exhaust_system: exhaust0,
             ignition_wire: wires.wire3
         )
@@ -115,7 +120,7 @@ public node honda_vfr750 {
             piston: piston(piston_params, blowby: k_28inH2O(0.01)),
             connecting_rod: connecting_rod(cr_params),
             rod_journal: rj0,
-            intake: intake,
+            intake: intake0,
             exhaust_system: exhaust0,
             ignition_wire: wires.wire1
         )
@@ -126,7 +131,7 @@ public node honda_vfr750 {
             piston: piston(piston_params, blowby: k_28inH2O(0.01)),
             connecting_rod: connecting_rod(cr_params),
             rod_journal: rj1,
-            intake: intake,
+            intake: intake0,
             exhaust_system: exhaust0,
             ignition_wire: wires.wire4
         )
@@ -134,7 +139,7 @@ public node honda_vfr750 {
             piston: piston(piston_params, blowby: k_28inH2O(0.01)),
             connecting_rod: connecting_rod(cr_params),
             rod_journal: rj0,
-            intake: intake,
+            intake: intake0,
             exhaust_system: exhaust0,
             ignition_wire: wires.wire2
         )
@@ -284,20 +289,20 @@ private node vfr750_engine_head {
     alias output __out: head;
 
     // Valve sizes for RC45:
-    // In:    29 mm              14.5 * pi ^2  -> 1.43 cm2 
-    // Ex:    24.5 mm     Areas: 24.5 * pi ^2  -> 1.21 cm2
+    // In:    29 mm              pi * 14.5^2  -> 660.5199 mm2 -> 6.605 cm2 
+    // Ex:    24.5 mm     Areas: pi * 12.25^2  -> 471.4352 mm2 -> 4.714 cm2
 
-    label inlet_valve_area(1.43 * 2)   // 2 valves per cyl
-    label exhaust_valve_area(1.21 * 2) // 2 valves per cyl
+    label inlet_valve_area(6.605)
+    label exhaust_valve_area(4.71)
 
-    label intake_runner_cross_section_area((inlet_valve_area * 2) * units.cm2)    // 2 cyls per head
-    label exhaust_runner_cross_section_area((exhaust_valve_area * 2) * units.cm2) // 2 cyls per head
+    label intake_runner_cross_section_area(inlet_valve_area * 1.1 * units.cm2) 
+    label exhaust_runner_cross_section_area(exhaust_valve_area * 0.95 * units.cm2)
 
-    label intake_runner_volume((intake_runner_cross_section_area * 13) * units.cc)   
-    label exhaust_runner_volume((exhaust_runner_cross_section_area * 9) * units.cc) 
+    label intake_runner_volume((intake_runner_cross_section_area * 5.5) * units.cc)   
+    label exhaust_runner_volume((exhaust_runner_cross_section_area * 6) * units.cc) 
     
     label lift_scale(1)
-    label flow_attenuation(0.99)
+    label flow_attenuation(1.2)
 
     function intake_flow(50 * units.thou)
     intake_flow
@@ -371,3 +376,5 @@ public node main {
     set_transmission(honda_vfr750_transmission())
     set_vehicle(honda_vfr750_vehicle())
 }
+
+main()

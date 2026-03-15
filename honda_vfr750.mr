@@ -21,38 +21,41 @@ public node honda_vfr750 {
 
     engine engine(
         name: "Honda VFR750F (RC36-II)",
-        starter_torque: 30 * units.lb_ft,
+        starter_torque: 40 * units.lb_ft,
         starter_speed: 340 * units.rpm,
-        redline: 11500 * units.rpm,
+        redline: 10500 * units.rpm,
         fuel: fuel(
             max_burning_efficiency: 0.925,
-            burning_efficiency_randomness: 0.85
+            burning_efficiency_randomness: 0.1,
+            molecular_afr: 14.1
         ),
-        hf_gain: 0.00012,
-        noise: 0.17,
-        jitter: 0.15,
+        hf_gain: 0.012,
+        noise: 0.8,
+        jitter: 0.4,
         simulation_frequency: 20000
     )
+
 
     wires wires()
 
     crankshaft c0(
         throw: stroke / 2,
-        flywheel_mass: 5 * units.kg,
-        mass: 6 * units.kg,
-        friction_torque: 2.1 * units.lb_ft,
-        moment_of_inertia: 0.22986844776863666 * 0.2,
+        flywheel_mass: 2.2 * units.kg,
+        mass: 4.2 * units.kg,
+        friction_torque: 10 * units.lb_ft,
+        moment_of_inertia: 0.018, 
         position_x: 0.0,
         position_y: 0.0,
-        tdc: 135 * units.deg          
+        tdc: 135 * units.deg
     )
+
 
     rod_journal rj0(angle: 0)            // pistons 1 and 2
     rod_journal rj1(angle: constants.pi) // pistons 3 and 4
     
     c0
-        .add_rod_journal(rj0) // order does not matter
-        .add_rod_journal(rj1)
+        .add_rod_journal(rj1) 
+        .add_rod_journal(rj0)
         
 
     piston_parameters piston_params(
@@ -74,35 +77,32 @@ public node honda_vfr750 {
         deck_height: stroke / 2 + rod_length + compression_height
     )
     
-    // Intake params
-    intake_parameters intake_params(
-        plenum_volume: 2.8 * units.L,
-        plenum_cross_section_area: 10.179 * 4 * units.cm2,   // (36mm Keihin carbs) -> (pi * 18^2)/100 cm2
-        intake_flow_rate: k_carb(160),
-        runner_flow_rate: k_carb(200),
-        runner_length: 210 * units.mm,
-        molecular_afr: 15.0, // air fuel ratio
-        idle_throttle_plate_position: 0.9952,
-        idle_flow_rate: k_carb(0.01),
+    label idle_throttle_plate(0.9973)
+    label carb_section_area(10.18) // cm2 for 36 mm keihin carbs
+    intake intake(
+        plenum_volume: 600 * units.cc, 
+        plenum_cross_section_area: carb_section_area * 4 * units.cm2,
+        intake_flow_rate: k_carb(150.0 * 4),
+        idle_flow_rate: k_carb(0.01 * 4),
+        idle_throttle_plate_position: idle_throttle_plate,
         throttle_gamma: 1.0
     )
 
-    intake intake0(intake_params)
-
-    exhaust_system_parameters es_params(
-        outlet_flow_rate: k_carb(1100.0),
-        primary_tube_length: 1.5 * units.m,
-        primary_flow_rate: k_carb(300.0),
-        velocity_decay: 1
+   exhaust_system_parameters es_params(
+        outlet_flow_rate: k_carb(1200.0),
+        primary_tube_length: 0.75 * units.m,  
+        primary_flow_rate: k_carb(380.0),     
+        velocity_decay: 1.3,
+        volume: 4.5 * units.L                
     )
 
-    exhaust_system exhaust0(
+    label impulse_response(ir_lib.mild_exhaust_0)
+    exhaust_system exhaust(
         es_params,
         audio_volume: 1.0,
-        //impulse_response: ir_lib.default_0
-        //impulse_response: ir_lib.mild_exhaust_0
-        impulse_response: ir_lib.minimal_muffling_01
+        impulse_response: impulse_response
     )
+
 
     cylinder_bank b0(bank_params, angle: 45 * units.deg)   // rear bank
     cylinder_bank b1(bank_params, angle: -45 * units.deg)  // front bank
@@ -112,16 +112,16 @@ public node honda_vfr750 {
             piston: piston(piston_params, blowby: k_28inH2O(0.01)),
             connecting_rod: connecting_rod(cr_params),
             rod_journal: rj1,
-            intake: intake0,
-            exhaust_system: exhaust0,
+            intake: intake,
+            exhaust_system: exhaust,
             ignition_wire: wires.wire3
         )
         .add_cylinder(
             piston: piston(piston_params, blowby: k_28inH2O(0.01)),
             connecting_rod: connecting_rod(cr_params),
             rod_journal: rj0,
-            intake: intake0,
-            exhaust_system: exhaust0,
+            intake: intake,
+            exhaust_system: exhaust,
             ignition_wire: wires.wire1
         )
         
@@ -131,16 +131,16 @@ public node honda_vfr750 {
             piston: piston(piston_params, blowby: k_28inH2O(0.01)),
             connecting_rod: connecting_rod(cr_params),
             rod_journal: rj1,
-            intake: intake0,
-            exhaust_system: exhaust0,
+            intake: intake,
+            exhaust_system: exhaust,
             ignition_wire: wires.wire4
         )
         .add_cylinder(
             piston: piston(piston_params, blowby: k_28inH2O(0.01)),
             connecting_rod: connecting_rod(cr_params),
             rod_journal: rj0,
-            intake: intake0,
-            exhaust_system: exhaust0,
+            intake: intake,
+            exhaust_system: exhaust,
             ignition_wire: wires.wire2
         )
         
@@ -180,32 +180,108 @@ private node vfr750_distributor {
     input wires;
 
     alias output __out:
-        ignition_module(timing_curve: timing_curve, rev_limit: 12500 * units.rpm, limiter_duration: 0.055)
+        ignition_module(timing_curve: timing_curve, rev_limit: 11500 * units.rpm, limiter_duration: 0.055)
             .connect_wire(wires.wire1, (0.0 / 8.0) * cycle)
             .connect_wire(wires.wire2, (5.0 / 8.0) * cycle)
             .connect_wire(wires.wire3, (2.0 / 8.0) * cycle)
             .connect_wire(wires.wire4, (7.0 / 8.0) * cycle);
 
-    function timing_curve(1000 * units.rpm)
+    function timing_curve(100 * units.rpm)
     timing_curve
-        .add_sample(0000 * units.rpm, 10 * units.deg)
-        .add_sample(1000 * units.rpm, 10 * units.deg)
-        .add_sample(2000 * units.rpm, 17.5 * units.deg)
-        .add_sample(3000 * units.rpm, 26.5 * units.deg)
-        .add_sample(4000 * units.rpm, 35 * units.deg)
-        .add_sample(5000 * units.rpm, 40 * units.deg)
-        .add_sample(6000 * units.rpm, 42 * units.deg)
-        .add_sample(7000 * units.rpm, 42.5 * units.deg)
-        .add_sample(8000 * units.rpm, 43 * units.deg)
-        .add_sample(9000 * units.rpm, 43.5 * units.deg)
-        .add_sample(10000 * units.rpm, 44 * units.deg)
-        .add_sample(11000 * units.rpm, 44.5 * units.deg)
-        .add_sample(12000 * units.rpm, 44.75 * units.deg)
-        .add_sample(13000 * units.rpm, 45 * units.deg)
+        .add_sample(0000 * units.rpm, 10.00 * units.deg)
+        .add_sample(0100 * units.rpm, 10.00 * units.deg)
+        .add_sample(0200 * units.rpm, 10.00 * units.deg)
+        .add_sample(0300 * units.rpm, 10.00 * units.deg)
+        .add_sample(0400 * units.rpm, 10.00 * units.deg)
+        .add_sample(0500 * units.rpm, 9.00 * units.deg)
+        .add_sample(0600 * units.rpm, 7.00 * units.deg)
+        .add_sample(0700 * units.rpm, 5.00 * units.deg)
+        .add_sample(0800 * units.rpm, 3.00 * units.deg)
+        .add_sample(0900 * units.rpm, 1.00 * units.deg)
+        .add_sample(1000 * units.rpm, 0.00 * units.deg)
+        .add_sample(1100 * units.rpm, 0.47 * units.deg)
+        .add_sample(1200 * units.rpm, 0.95 * units.deg)
+        .add_sample(1300 * units.rpm, 1.42 * units.deg)
+        .add_sample(1400 * units.rpm, 1.90 * units.deg)
+        .add_sample(1500 * units.rpm, 2.37 * units.deg)
+        .add_sample(1600 * units.rpm, 2.85 * units.deg)
+        .add_sample(1700 * units.rpm, 3.32 * units.deg)
+        .add_sample(1800 * units.rpm, 3.79 * units.deg)
+        .add_sample(1900 * units.rpm, 4.27 * units.deg)
+        .add_sample(2000 * units.rpm, 4.74 * units.deg)
+        .add_sample(2100 * units.rpm, 5.22 * units.deg)
+        .add_sample(2200 * units.rpm, 5.69 * units.deg)
+        .add_sample(2300 * units.rpm, 6.17 * units.deg)
+        .add_sample(2400 * units.rpm, 6.64 * units.deg)
+        .add_sample(2500 * units.rpm, 7.12 * units.deg)
+        .add_sample(2600 * units.rpm, 7.59 * units.deg)
+        .add_sample(2700 * units.rpm, 8.06 * units.deg)
+        .add_sample(2800 * units.rpm, 8.54 * units.deg)
+        .add_sample(2900 * units.rpm, 9.01 * units.deg)
+        .add_sample(3000 * units.rpm, 9.49 * units.deg)
+        .add_sample(3100 * units.rpm, 9.96 * units.deg)
+        .add_sample(3200 * units.rpm, 10.44 * units.deg)
+        .add_sample(3300 * units.rpm, 10.91 * units.deg)
+        .add_sample(3400 * units.rpm, 11.38 * units.deg)
+        .add_sample(3500 * units.rpm, 11.86 * units.deg)
+        .add_sample(3600 * units.rpm, 12.33 * units.deg)
+        .add_sample(3700 * units.rpm, 12.81 * units.deg)
+        .add_sample(3800 * units.rpm, 13.28 * units.deg)
+        .add_sample(3900 * units.rpm, 13.76 * units.deg)
+        .add_sample(4000 * units.rpm, 14.23 * units.deg)
+        .add_sample(4100 * units.rpm, 14.71 * units.deg)
+        .add_sample(4200 * units.rpm, 15.18 * units.deg)
+        .add_sample(4300 * units.rpm, 15.65 * units.deg)
+        .add_sample(4400 * units.rpm, 16.13 * units.deg)
+        .add_sample(4500 * units.rpm, 16.60 * units.deg)
+        .add_sample(4600 * units.rpm, 17.08 * units.deg)
+        .add_sample(4700 * units.rpm, 17.55 * units.deg)
+        .add_sample(4800 * units.rpm, 18.03 * units.deg)
+        .add_sample(4900 * units.rpm, 18.50 * units.deg)
+        .add_sample(5000 * units.rpm, 18.97 * units.deg)
+        .add_sample(5100 * units.rpm, 19.45 * units.deg)
+        .add_sample(5200 * units.rpm, 19.92 * units.deg)
+        .add_sample(5300 * units.rpm, 20.40 * units.deg)
+        .add_sample(5400 * units.rpm, 20.87 * units.deg)
+        .add_sample(5500 * units.rpm, 21.35 * units.deg)
+        .add_sample(5600 * units.rpm, 21.82 * units.deg)
+        .add_sample(5700 * units.rpm, 22.29 * units.deg)
+        .add_sample(5800 * units.rpm, 22.77 * units.deg)
+        .add_sample(5900 * units.rpm, 23.24 * units.deg)
+        .add_sample(6000 * units.rpm, 23.72 * units.deg)
+        .add_sample(6100 * units.rpm, 24.19 * units.deg)
+        .add_sample(6200 * units.rpm, 24.67 * units.deg)
+        .add_sample(6300 * units.rpm, 25.14 * units.deg)
+        .add_sample(6400 * units.rpm, 25.62 * units.deg)
+        .add_sample(6500 * units.rpm, 26.09 * units.deg)
+        .add_sample(6600 * units.rpm, 26.56 * units.deg)
+        .add_sample(6700 * units.rpm, 27.04 * units.deg)
+        .add_sample(6800 * units.rpm, 27.51 * units.deg)
+        .add_sample(6900 * units.rpm, 27.99 * units.deg)
+        .add_sample(7000 * units.rpm, 28.46 * units.deg)
+        .add_sample(7100 * units.rpm, 28.94 * units.deg)
+        .add_sample(7200 * units.rpm, 29.41 * units.deg)
+        .add_sample(7300 * units.rpm, 29.88 * units.deg)
+        .add_sample(7400 * units.rpm, 30.36 * units.deg)
+        .add_sample(7500 * units.rpm, 30.83 * units.deg)
+        .add_sample(7600 * units.rpm, 31.31 * units.deg)
+        .add_sample(7700 * units.rpm, 31.78 * units.deg)
+        .add_sample(7800 * units.rpm, 32.26 * units.deg)
+        .add_sample(7900 * units.rpm, 32.73 * units.deg)
+        .add_sample(8000 * units.rpm, 33.21 * units.deg)
+        .add_sample(8100 * units.rpm, 33.68 * units.deg)
+        .add_sample(8200 * units.rpm, 34.15 * units.deg)
+        .add_sample(8300 * units.rpm, 34.63 * units.deg)
+        .add_sample(8400 * units.rpm, 35.10 * units.deg)
+        .add_sample(8500 * units.rpm, 35.58 * units.deg)
+        .add_sample(8600 * units.rpm, 36.05 * units.deg)
+        .add_sample(8700 * units.rpm, 36.53 * units.deg)
+        .add_sample(8800 * units.rpm, 37.00 * units.deg)
+        .add_sample(8900 * units.rpm, 37.00 * units.deg)
 }
 
 private node vfr750_camshaft_builder {
-    input advance: 0 * units.deg; 
+    input advance: 7 * units.deg; 
     input base_radius: 12.5 * units.mm;
 
     output intake_cam_0: _intake_cam_0;
@@ -219,18 +295,19 @@ private node vfr750_camshaft_builder {
     )
 
     harmonic_cam_lobe intake_lobe_profile(
-        duration_at_50_thou: 190 * units.deg,
+        duration_at_50_thou: 202 * units.deg,
         gamma: 1,
         lift: 8 * units.mm,
         steps: 100
     )
-    
+
     harmonic_cam_lobe exhaust_lobe_profile(
-        duration_at_50_thou: 190 * units.deg,
+        duration_at_50_thou: 198 * units.deg,
         gamma: 1,
-        lift: 8 * units.mm,
+        lift: 7.5 * units.mm,
         steps: 100
     )
+
 
     camshaft _intake_cam_0(params, lobe_profile: intake_lobe_profile)
     camshaft _exhaust_cam_0(params, lobe_profile: exhaust_lobe_profile)
@@ -289,44 +366,46 @@ private node vfr750_engine_head {
     alias output __out: head;
 
     // Valve sizes for RC45:
-    // In:    29 mm              pi * 14.5^2  -> 660.5199 mm2 -> 6.605 cm2 
-    // Ex:    24.5 mm     Areas: pi * 12.25^2  -> 471.4352 mm2 -> 4.714 cm2
+    // In:    29 mm       -> 6.60 cm2 
+    // Ex:    24.5 mm     -> 4.71 cm2
 
-    label inlet_valve_area(6.605)
-    label exhaust_valve_area(4.71)
+    label inlet_valve_area(6.60 * 2)   // 2 valves per cyl
+    label exhaust_valve_area(4.71 * 2) // 2 valves per cyl
 
-    label intake_runner_cross_section_area(inlet_valve_area * 1.1 * units.cm2) 
-    label exhaust_runner_cross_section_area(exhaust_valve_area * 0.95 * units.cm2)
+    label intake_runner_cross_section_area(6.5 * units.cm2)
+    label exhaust_runner_cross_section_area(5 * units.cm2)
 
-    label intake_runner_volume((intake_runner_cross_section_area * 5.5) * units.cc)   
-    label exhaust_runner_volume((exhaust_runner_cross_section_area * 6) * units.cc) 
+    label intake_runner_volume(115 * units.cc)   
+    label exhaust_runner_volume(60 * units.cc) 
     
     label lift_scale(1)
-    label flow_attenuation(1.2)
+    label flow_attenuation(0.99)
 
     function intake_flow(50 * units.thou)
     intake_flow
         .add_flow_sample(0 * lift_scale, 0 * flow_attenuation)
-        .add_flow_sample(50 * lift_scale, 41 * flow_attenuation)
-        .add_flow_sample(100 * lift_scale, 77 * flow_attenuation)
-        .add_flow_sample(150 * lift_scale, 113 * flow_attenuation)
-        .add_flow_sample(200 * lift_scale, 144 * flow_attenuation)
-        .add_flow_sample(250 * lift_scale, 171 * flow_attenuation)
-        .add_flow_sample(300 * lift_scale, 194 * flow_attenuation)
-        .add_flow_sample(350 * lift_scale, 225 * flow_attenuation)
+        .add_flow_sample(50 * lift_scale, 34 * flow_attenuation)
+        .add_flow_sample(100 * lift_scale, 65 * flow_attenuation)
+        .add_flow_sample(150 * lift_scale, 98 * flow_attenuation)
+        .add_flow_sample(200 * lift_scale, 128 * flow_attenuation)
+        .add_flow_sample(250 * lift_scale, 154 * flow_attenuation)
+        .add_flow_sample(300 * lift_scale, 175 * flow_attenuation)
+        .add_flow_sample(350 * lift_scale, 192 * flow_attenuation)
+
 
     function exhaust_flow(50 * units.thou)
     exhaust_flow
         .add_flow_sample(0 * lift_scale, 0 * flow_attenuation)
-        .add_flow_sample(50 * lift_scale, 34 * flow_attenuation)
-        .add_flow_sample(100 * lift_scale, 65 * flow_attenuation)
-        .add_flow_sample(150 * lift_scale, 95 * flow_attenuation)
-        .add_flow_sample(200 * lift_scale, 121 * flow_attenuation)
-        .add_flow_sample(250 * lift_scale, 144 * flow_attenuation)
-        .add_flow_sample(300 * lift_scale, 163 * flow_attenuation)
-        .add_flow_sample(350 * lift_scale, 189 * flow_attenuation)
+        .add_flow_sample(50 * lift_scale, 28 * flow_attenuation)
+        .add_flow_sample(100 * lift_scale, 54 * flow_attenuation)
+        .add_flow_sample(150 * lift_scale, 79 * flow_attenuation)
+        .add_flow_sample(200 * lift_scale, 102 * flow_attenuation)
+        .add_flow_sample(250 * lift_scale, 122 * flow_attenuation)
+        .add_flow_sample(300 * lift_scale, 140 * flow_attenuation)
+        .add_flow_sample(350 * lift_scale, 158 * flow_attenuation)
 
-    label cyl_head_chamber_vol(17 * units.cc)
+
+    label cyl_head_chamber_vol(19 * units.cc)
     cylinder_head head(
         chamber_volume: cyl_head_chamber_vol,
         intake_runner_volume: intake_runner_volume,
@@ -342,39 +421,37 @@ private node vfr750_engine_head {
     )
 }
 
-
-
-private node honda_vfr750_transmission {
+public node honda_vfr750_transmission {
     alias output __out: transmission;
 
     transmission transmission(
-        max_clutch_torque: 60 * units.lb_ft
+        max_clutch_torque: 80 * units.lb_ft
     )
 
-    transmission.add_gear(2.8461)
-    transmission.add_gear(2.0625)
-    transmission.add_gear(1.6315)
-    transmission.add_gear(1.3333)
-    transmission.add_gear(1.1538)
-    transmission.add_gear(1.0357)
+    transmission.add_gear(2.846)
+    transmission.add_gear(2.062)
+    transmission.add_gear(1.631)
+    transmission.add_gear(1.333)
+    transmission.add_gear(1.153)
+    transmission.add_gear(1.035)
 }
 
-private node honda_vfr750_vehicle {
+public node honda_vfr750_vehicle {
     alias output __out:
         vehicle(
             mass: (226 + 65) * units.kg,
-            drag_coefficient: 0.82, // not the most aerodynamic bike out there
+            drag_coefficient: 0.82, // not the most aerodynamic bike out thereww
             cross_sectional_area: (72 * 118.5 * 0.6) * units.cm2, // 72 cm wide, 118.5 cm tall
-            diff_ratio: 9.4,
-            tire_radius: (43.18 + 10.8) * units.cm,
+            diff_ratio: 5.454,
+            tire_radius: 32.79 * units.cm,
             rolling_resistance: 29.03 * units.N
         );
 }
 
 public node main {
     set_engine(honda_vfr750())
-    set_transmission(honda_vfr750_transmission())
     set_vehicle(honda_vfr750_vehicle())
+    set_transmission(honda_vfr750_transmission())
 }
 
 main()

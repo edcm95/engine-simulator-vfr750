@@ -15,10 +15,9 @@ Built from the author's own first bike — every effort was made to model the en
 | **Displacement** | 748 cc |
 | **Bore × Stroke** | 70.0 mm × 48.6 mm |
 | **Connecting Rod Length** | 101.5 mm |
-| **Compression Height** | 17.3 mm |
 | **Redline** | 10,500 RPM |
 | **Rev Limiter** | 11,500 RPM |
-| **Fuel** | Premium (max burning efficiency 0.925, AFR 14.1) |
+| **Fuel** | Premium (max burning efficiency 0.925) |
 | **Starter Torque / Speed** | 40 lb-ft @ 340 RPM |
 
 ## Valvetrain
@@ -31,11 +30,10 @@ Built from the author's own first bike — every effort was made to model the en
 | **Timing** | 15° BTDC / 37° ABDC | 35° BBDC / 10° ATDC |
 | **Cam Advance** | 7° |
 
-## Induction & Exhaust
+## Induction
 
 - **Carburetors**: 36 mm Keihin (4x), cross-section 10.18 cm² each
-- **Intake Plenum**: 600 cc
-- **Exhaust System**: 4-2-1, 0.75 m primary tubes, 4.5 L total volume
+- **Intake Plenum**
 
 ## Transmission & Drivetrain
 
@@ -57,7 +55,7 @@ Built from the author's own first bike — every effort was made to model the en
 
 ## Ignition
 
-- Distributor-based with progressive timing curve
+- Electric CDI with progressive timing curve
 - Advances from ~10° BTDC at idle to ~37° BTDC near redline
 - Firing order mirrors the real VFR's 90° V4 layout
 
